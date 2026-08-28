@@ -230,7 +230,15 @@ The SHA-256 cache key covers the model ID, prompt version, temperature, complete
 
 Each call reports cache hits, fallback use, structured-output failure, cache failure, and failure reason. These diagnostics will support the required evaluation failure and fallback rates. Without a configured backend, a cache hit works normally and a cache miss returns the deterministic fallback rather than making an external call.
 
-## 7. Tests and Statistical Checks
+## 7. Policies (`policy.py`)
+
+All policies implement `predict_proba(observations)` and return an $[N,3]$ NumPy array in canonical action order. `AlwaysMaintainPolicy` reproduces the supplied baseline $(1,0,0)$ for every observation.
+
+`ZeroShotLLMPolicy` separates the optional `handoff_note` from the structured state, constructs versioned messages with `prompts.py`, obtains validated decisions through `LLMClient`, and returns only the probabilities. Unexpected metadata or post-action fields fail before a model call. LLM rationales remain available in auditable call results but are not returned in prediction arrays or future test CSV files.
+
+The policy accumulates cache-hit, structured-output-failure, fallback, and failure-reason diagnostics across calls and supports explicitly resetting those metrics. It also rejects a client configured with a prompt version other than `zero_shot_v1`, preventing cache and policy-version drift.
+
+## 8. Tests and Statistical Checks
 
 Tests protect deterministic invariants; exploratory scripts report dataset statistics. Unit tests should not merely print descriptive tables.
 
@@ -272,7 +280,16 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - cache-key sensitivity to the model, prompt, and messages;
 - rejection of invalid message structures before a model call.
 
-Current status: 35 tests pass.
+`tests/test_policy.py` checks:
+
+- canonical always-maintain baseline output;
+- zero-shot matrix shape and normalization;
+- separation of handoff notes from structured state;
+- rejection of post-action fields before a model call;
+- fallback and cache-hit diagnostics;
+- empty input batches and prompt-version mismatch.
+
+Current status: 43 tests pass.
 
 ### Tests to add later
 
@@ -296,7 +313,7 @@ Current status: 35 tests pass.
 - zero-shot/improved agreement and disagreement patterns;
 - robustness flip rates and alternate-reward policy rankings.
 
-## 8. Working Policy-Improvement Hypothesis
+## 9. Working Policy-Improvement Hypothesis
 
 > This section is a hypothesis to test, not a claim that the method is already validated.
 
@@ -430,10 +447,10 @@ This would explicitly teach a context-sensitive boundary between plausible actio
 - Confidence intervals will resample complete patients.
 - We will report support failures and not treat critic preferences as ground truth.
 
-## 9. Immediate Implementation Order
+## 10. Immediate Implementation Order
 
 1. **Completed:** implement the zero-shot prompt, schema, deterministic fallback, and cache.
-2. Implement `ZeroShotLLMPolicy`, then cache $\pi_0(a\mid s)$ on training observations.
+2. **Policy interface completed:** select/connect the model backend, then cache $\pi_0(a\mid s)$ on training observations.
 3. Implement the behavior classifier and action critic.
 4. Generate audited supported positive/near-negative training pairs.
 5. Implement the improved policy using retrieved contrastive examples.
