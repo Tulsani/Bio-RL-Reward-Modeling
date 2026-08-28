@@ -1,0 +1,21 @@
+[
+  "age",
+  "sex",
+  "diabetes",
+  "ckd",
+  "copd",
+  "map_mm_hg",
+  "systolic_bp",
+  "heart_rate",
+  "respiratory_rate",
+  "spo2",
+  "temperature_c",
+  "creatinine_mg_dl",
+  "lactate_mmol_l",
+  "wbc_k_ul",
+  "urine_output_6h_ml",
+  "vasopressor_active_pre_action",
+  "antibiotics_active",
+  "iv_fluids_previous_6h_ml",
+  "previous_action"
+]

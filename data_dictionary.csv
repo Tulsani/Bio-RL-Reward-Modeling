@@ -1,0 +1,36 @@
+column,type,recommended_role,timing,description
+patient_id,string,identifier,pre-action,Synthetic patient identifier. Do not use as a model feature.
+time_step,integer,sequence index,pre-action,"Decision index within an episode, from 0 through 11."
+hours_since_admission,integer,time,pre-action,Hours since synthetic admission. Decision points occur every 6 hours.
+split,category,metadata,pre-action,"Patient-level train, validation, or test assignment."
+age,integer,state,pre-action,Age in years.
+sex,category,state,pre-action,Synthetic sex category F or M.
+hospital_id,category,state or metadata,pre-action,Synthetic hospital identifier.
+provider_id,category,state or metadata,pre-action,Synthetic provider identifier nested within hospital.
+diabetes,binary,state,pre-action,Synthetic diabetes comorbidity flag.
+ckd,binary,state,pre-action,Synthetic chronic kidney disease flag.
+copd,binary,state,pre-action,Synthetic chronic obstructive pulmonary disease flag.
+map_mm_hg,float,state,pre-action,Mean arterial pressure in mmHg.
+systolic_bp,float,state,pre-action,Systolic blood pressure in mmHg.
+heart_rate,float,state,pre-action,Heart rate in beats per minute.
+respiratory_rate,float,state,pre-action,Respiratory rate in breaths per minute.
+spo2,float,state,pre-action,Pulse oximetry oxygen saturation in percent.
+temperature_c,float,state,pre-action,Temperature in degrees Celsius.
+creatinine_mg_dl,float nullable,state,pre-action,Most recent creatinine measurement; may be missing.
+lactate_mmol_l,float nullable,state,pre-action,Most recent lactate measurement; may be missing.
+wbc_k_ul,float nullable,state,pre-action,Most recent white blood cell count; may be missing.
+urine_output_6h_ml,float nullable,state,pre-action,Urine output over the preceding 6-hour interval; may be missing.
+vasopressor_active_pre_action,binary,state,pre-action,Whether vasopressor therapy is active immediately before the logged action.
+antibiotics_active,binary,state,pre-action,Whether antibiotics are active immediately before the logged action.
+iv_fluids_previous_6h_ml,float,state or action history,pre-action,IV fluid volume administered during the prior 6-hour interval.
+previous_action,category,state or action history,pre-action,Action logged at the prior decision point; maintain at time step 0.
+observed_clinician_action,category,logged action,action,"Behavior-policy action: maintain, iv_fluids, or escalate_vasopressor."
+next_6h_map_delta,float,outcome,post-action,Change in MAP during the 6 hours after the logged action.
+next_6h_lactate_delta,float,outcome,post-action,Change in latent synthetic lactate during the 6 hours after the logged action.
+next_6h_deterioration,binary,outcome,post-action,Synthetic deterioration event during the 6 hours after the action.
+adverse_hypotension_next_6h,binary,outcome,post-action,Synthetic severe hypotension event during the next 6 hours.
+adverse_fluid_overload_next_6h,binary,outcome,post-action,Synthetic fluid-overload event during the next 6 hours.
+adverse_tachyarrhythmia_next_6h,binary,outcome,post-action,Synthetic tachyarrhythmia event during the next 6 hours.
+terminal,binary,termination,post-action,"1 at the final decision point of the episode, otherwise 0."
+icu_mortality,binary,episode outcome in patients.csv,episode end,Synthetic ICU mortality indicator.
+hospital_mortality,binary,episode outcome in patients.csv,episode end,Synthetic hospital mortality indicator; always at least ICU mortality.
