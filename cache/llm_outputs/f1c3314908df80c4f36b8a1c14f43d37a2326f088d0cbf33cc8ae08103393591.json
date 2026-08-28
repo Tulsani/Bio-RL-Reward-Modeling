@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "f1c3314908df80c4f36b8a1c14f43d37a2326f088d0cbf33cc8ae08103393591",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.05, \"prob_iv_fluids\": 0.7, \"prob_escalate_vasopressor\": 0.25, \"rationale\": \"MAP 61.3 mmHg with tachycardia and low urine output suggests fluid responsiveness and need for circulatory support.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

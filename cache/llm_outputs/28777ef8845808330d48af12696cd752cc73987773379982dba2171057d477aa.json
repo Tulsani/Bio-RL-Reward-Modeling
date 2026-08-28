@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "28777ef8845808330d48af12696cd752cc73987773379982dba2171057d477aa",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.35, \"prob_iv_fluids\": 0.45, \"prob_escalate_vasopressor\": 0.2, \"rationale\": \"Tachycardia, borderline MAP, and low urine output suggest fluid responsiveness but no clear vasopressor need.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

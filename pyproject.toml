@@ -3,9 +3,11 @@ name = "biostack-rl-takehome-v5-candidate"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    "mistralai>=2.9.4",
     "numpy>=2.4.6",
     "pandas>=3.0.5",
     "pydantic>=2.13.4",
+    "python-dotenv>=1.2.3",
     "scikit-learn>=1.9.0",
 ]
 

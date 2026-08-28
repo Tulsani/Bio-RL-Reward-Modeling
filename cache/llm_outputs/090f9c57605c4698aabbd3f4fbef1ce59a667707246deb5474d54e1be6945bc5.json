@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "090f9c57605c4698aabbd3f4fbef1ce59a667707246deb5474d54e1be6945bc5",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.05, \"prob_iv_fluids\": 0.05, \"prob_escalate_vasopressor\": 0.9, \"rationale\": \"MAP 71.2 mmHg with active vasopressor and low urine output suggests need for further support.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

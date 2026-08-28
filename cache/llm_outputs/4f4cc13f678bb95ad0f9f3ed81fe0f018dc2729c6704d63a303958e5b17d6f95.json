@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "4f4cc13f678bb95ad0f9f3ed81fe0f018dc2729c6704d63a303958e5b17d6f95",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.2, \"prob_iv_fluids\": 0.7, \"prob_escalate_vasopressor\": 0.1, \"rationale\": \"MAP 64.4 mmHg with CKD and no vasopressors suggests fluid responsiveness may improve perfusion.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

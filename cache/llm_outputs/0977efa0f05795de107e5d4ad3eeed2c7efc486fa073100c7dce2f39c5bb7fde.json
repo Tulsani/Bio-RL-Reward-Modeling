@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "0977efa0f05795de107e5d4ad3eeed2c7efc486fa073100c7dce2f39c5bb7fde",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.3, \"prob_iv_fluids\": 0.1, \"prob_escalate_vasopressor\": 0.6, \"rationale\": \"MAP 71.6 mmHg with active vasopressor and high heart rate suggests need for vasopressor escalation despite recent fluids.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

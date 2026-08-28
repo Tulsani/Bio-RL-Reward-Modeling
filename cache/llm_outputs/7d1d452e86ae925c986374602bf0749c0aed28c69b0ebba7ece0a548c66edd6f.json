@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "7d1d452e86ae925c986374602bf0749c0aed28c69b0ebba7ece0a548c66edd6f",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.05, \"prob_iv_fluids\": 0.7, \"prob_escalate_vasopressor\": 0.25, \"rationale\": \"Severe hypotension (MAP 44.5 mmHg) with tachycardia and elevated lactate favors IV fluids and vasopressor escalation.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

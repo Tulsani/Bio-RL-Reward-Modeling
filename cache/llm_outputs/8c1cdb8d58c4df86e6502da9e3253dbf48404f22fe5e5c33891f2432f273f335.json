@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "8c1cdb8d58c4df86e6502da9e3253dbf48404f22fe5e5c33891f2432f273f335",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.05, \"prob_iv_fluids\": 0.1, \"prob_escalate_vasopressor\": 0.85, \"rationale\": \"Severe sepsis with tachycardia, hypotension, high lactate, and low urine output despite prior IV fluids.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

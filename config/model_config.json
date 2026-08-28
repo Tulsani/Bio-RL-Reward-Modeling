@@ -1,0 +1,10 @@
+{
+  "provider": "mistral",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "temperature": 0.0,
+  "random_seed": 42,
+  "max_tokens": 256,
+  "response_format": "pydantic_json_schema",
+  "cache_dir": "cache/llm_outputs"
+}

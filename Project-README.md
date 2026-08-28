@@ -52,7 +52,7 @@ uv add <package>
 uv add --dev <package>
 ```
 
-Current runtime dependencies are NumPy, pandas, Pydantic, and scikit-learn. Pytest and Ruff are development dependencies. The LLM SDK will be selected later; the completed repository must still work from cached or mock responses without API credentials.
+Current runtime dependencies include NumPy, pandas, Pydantic, scikit-learn, the official `mistralai` SDK, and `python-dotenv`. Pytest and Ruff are development dependencies. The completed repository must still work from cached or mock responses without API credentials.
 
 ## 3. Reward Design (`reward.py`)
 
@@ -230,6 +230,20 @@ The SHA-256 cache key covers the model ID, prompt version, temperature, complete
 
 Each call reports cache hits, fallback use, structured-output failure, cache failure, and failure reason. These diagnostics will support the required evaluation failure and fallback rates. Without a configured backend, a cache hit works normally and a cache miss returns the deterministic fallback rather than making an external call.
 
+### Hosted Mistral backend
+
+`mistral_backend.py` implements `CompletionBackend` with the official Mistral SDK. The planned zero-shot model is the immutable `mistral-small-2603` identifier rather than a moving `-latest` alias. Configuration is stored in `config/model_config.json`: temperature 0, random seed 42, maximum 256 output tokens, and Pydantic JSON-schema output. Mistral lists this model as supporting structured outputs and batch inference ([model documentation](https://docs.mistral.ai/models/mistral-small-4-0-26-03)).
+
+The local credential is `MISTRAL_API_KEY` in the Git-ignored `.env`; `.env.example` contains only the variable name. OCR and chat are different endpoints and models. An API key previously used for Mistral OCR can be reused only if that account/key also has access to the chat model. No credential is stored in configuration, cache keys, prompts, or output files.
+
+Before any full run, we will make a 10--20-state smoke test and inspect structured-output failures, entropy, rationales, latency, and cache reuse. We will not launch thousands of requests without reviewing this sample and estimating cost.
+
+#### Initial hosted smoke test
+
+On 12 deterministically selected training states (low MAP, MAP near 65, high or missing lactate, active vasopressor, and recent fluids), `mistral-small-2603` produced 12 schema-valid responses with no fallbacks. A repeat run produced 12/12 cache hits and no new hosted calls.
+
+The selected set is intentionally difficult and is not representative, so its action distribution is not a policy-value result: six states favored `iv_fluids`, four favored `escalate_vasopressor`, and two favored `maintain`. The sample exposed several useful zero-shot weaknesses: coarse repeated probability patterns, aggressive escalation in some states with MAP near 71, diagnostic language not explicitly present in the state, and one mismatch between the highest-probability action and the rationale. We will preserve these findings rather than tune the zero-shot baseline on validation data.
+
 ## 7. Policies (`policy.py`)
 
 All policies implement `predict_proba(observations)` and return an $[N,3]$ NumPy array in canonical action order. `AlwaysMaintainPolicy` reproduces the supplied baseline $(1,0,0)$ for every observation.
@@ -289,7 +303,15 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - fallback and cache-hit diagnostics;
 - empty input batches and prompt-version mismatch.
 
-Current status: 43 tests pass.
+`tests/test_mistral_backend.py` checks:
+
+- Pydantic structured-output configuration;
+- immutable model ID and deterministic generation settings;
+- missing credential errors without exposing a key;
+- empty choices and invalid response content;
+- generation-limit validation using a fake client without network calls.
+
+Current status: 56 tests pass.
 
 ### Tests to add later
 

@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "42333f66444daba162acc64e9eb10b1b772ec6998142157da5a6b9d3d27f4a2f",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.05, \"prob_iv_fluids\": 0.7, \"prob_escalate_vasopressor\": 0.25, \"rationale\": \"Severe hypotension with high lactate and low urine output despite no prior vasopressors or fluids.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

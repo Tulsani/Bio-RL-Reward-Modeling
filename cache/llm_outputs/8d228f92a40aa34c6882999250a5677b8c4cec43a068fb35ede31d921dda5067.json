@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "8d228f92a40aa34c6882999250a5677b8c4cec43a068fb35ede31d921dda5067",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.3, \"prob_iv_fluids\": 0.5, \"prob_escalate_vasopressor\": 0.2, \"rationale\": \"MAP 65 mmHg with borderline tachycardia and lactate 2.92 suggests early shock needing fluid resuscitation.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}

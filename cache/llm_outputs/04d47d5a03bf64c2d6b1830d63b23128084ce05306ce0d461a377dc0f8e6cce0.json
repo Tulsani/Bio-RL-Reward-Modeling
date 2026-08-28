@@ -1,0 +1,9 @@
+{
+  "cache_format_version": 1,
+  "cache_key": "04d47d5a03bf64c2d6b1830d63b23128084ce05306ce0d461a377dc0f8e6cce0",
+  "model_id": "mistral-small-2603",
+  "prompt_version": "zero_shot_v1",
+  "raw_response": "{\"prob_maintain\": 0.45, \"prob_iv_fluids\": 0.3, \"prob_escalate_vasopressor\": 0.25, \"rationale\": \"MAP is low at 63.2 mmHg despite prior IV fluids, suggesting possible fluid responsiveness but no clear shock requiring vasopressors yet.\"}",
+  "response_schema_version": 1,
+  "temperature": 0.0
+}
