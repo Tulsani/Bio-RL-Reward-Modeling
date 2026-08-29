@@ -1,0 +1,13 @@
+{
+  "cross_validation_folds": 5,
+  "random_seed": 42,
+  "minimum_propensity": 0.02,
+  "minimum_advantage": 0.10,
+  "maximum_value_disagreement": 0.50,
+  "max_examples_per_action": 100,
+  "require_preferred_matches_logged": true,
+  "minimum_logged_reward": 0.0,
+  "minimum_examples_per_action": 10,
+  "examples_path": "outputs/contrastive_examples.csv",
+  "diagnostics_path": "outputs/contrastive_examples_metrics.json"
+}

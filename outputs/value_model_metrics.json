@@ -5,14 +5,28 @@
     "escalate_vasopressor"
   ],
   "config": {
-    "alpha": 1.0,
     "artifact_path": "artifacts/action_reward_model.joblib",
+    "baseline_model": "ridge",
     "cross_validation_folds": 5,
     "estimand": "one_step_expected_reward",
     "metrics_path": "outputs/value_model_metrics.json",
     "minimum_support_propensity": 0.02,
-    "model_type": "per_action_ridge_t_learner",
-    "random_seed": 42
+    "models": {
+      "hist_gradient_boosting": {
+        "l2_regularization": 1.0,
+        "learning_rate": 0.05,
+        "max_iter": 200,
+        "max_leaf_nodes": 15,
+        "min_samples_leaf": 20,
+        "model_type": "hist_gradient_boosting"
+      },
+      "ridge": {
+        "alpha": 1.0,
+        "model_type": "ridge"
+      }
+    },
+    "random_seed": 42,
+    "selected_model": "ridge"
   },
   "counterfactual_warning": "Only logged-action predictions are validated. Other action values are modeled counterfactual estimates and require support checks.",
   "estimand": "one_step_expected_reward",
@@ -79,6 +93,129 @@
       "r2": 0.07580346405558913,
       "rmse": 1.0519472504864573,
       "rows": 1536
+    }
+  },
+  "model_comparison": {
+    "baseline": "ridge",
+    "delta_definition": "candidate minus baseline; lower RMSE/MAE and higher R2 are better",
+    "deltas_vs_baseline": {
+      "hist_gradient_boosting": {
+        "map_below_65": {
+          "mae": 0.017294083486126044,
+          "r2": 0.0550222162967845,
+          "rmse": -0.03179442256326204
+        },
+        "overall": {
+          "mae": 0.005283718384276437,
+          "r2": -0.007121040133977519,
+          "rmse": 0.0029116896056105013
+        },
+        "per_action": {
+          "escalate_vasopressor": {
+            "mae": 0.05259174555215074,
+            "r2": -0.1367081295184287,
+            "rmse": 0.05606206686103099
+          },
+          "iv_fluids": {
+            "mae": 0.01941467932368779,
+            "r2": -0.03267626240603716,
+            "rmse": 0.015333003720441885
+          },
+          "maintain": {
+            "mae": 0.0010264746613646292,
+            "r2": 0.0060352166792913,
+            "rmse": -0.0022578942187997386
+          }
+        }
+      }
+    },
+    "map_below_65": {
+      "hist_gradient_boosting": {
+        "actual_mean": -0.049584895833333316,
+        "mae": 0.7302752073524363,
+        "predicted_mean": -0.04371058712105977,
+        "r2": 0.13082568035237363,
+        "rmse": 1.0201528279231953,
+        "rows": 1536
+      },
+      "ridge": {
+        "actual_mean": -0.049584895833333316,
+        "mae": 0.7129811238663103,
+        "predicted_mean": 0.06784372535701173,
+        "r2": 0.07580346405558913,
+        "rmse": 1.0519472504864573,
+        "rows": 1536
+      }
+    },
+    "overall": {
+      "hist_gradient_boosting": {
+        "actual_mean": -0.1274055238095238,
+        "mae": 0.523165325906076,
+        "predicted_mean": -0.12982760596894344,
+        "r2": 0.06072915966147585,
+        "rmse": 0.7666497209715156
+      },
+      "ridge": {
+        "actual_mean": -0.1274055238095238,
+        "mae": 0.5178816075217996,
+        "predicted_mean": -0.12753734108722692,
+        "r2": 0.06785019979545337,
+        "rmse": 0.7637380313659051
+      }
+    },
+    "per_action": {
+      "hist_gradient_boosting": {
+        "escalate_vasopressor": {
+          "actual_mean": 0.47579816513761475,
+          "count": 872,
+          "mae": 0.6892079179172461,
+          "predicted_mean": 0.4624105845490651,
+          "r2": -0.15495424565057192,
+          "rmse": 0.9183471699962675
+        },
+        "iv_fluids": {
+          "actual_mean": 0.17830132782531724,
+          "count": 3389,
+          "mae": 0.6568670633950568,
+          "predicted_mean": 0.17265213303820398,
+          "r2": 0.013949194109467822,
+          "rmse": 0.9176575285760845
+        },
+        "maintain": {
+          "actual_mean": -0.2020047948803668,
+          "count": 20939,
+          "mae": 0.4946107469584713,
+          "predicted_mean": -0.2034479095950443,
+          "r2": 0.023103305726519197,
+          "rmse": 0.7320800529707292
+        }
+      },
+      "ridge": {
+        "escalate_vasopressor": {
+          "actual_mean": 0.47579816513761475,
+          "count": 872,
+          "mae": 0.6366161723650954,
+          "predicted_mean": 0.4755631360562915,
+          "r2": -0.01824611613214322,
+          "rmse": 0.8622851031352365
+        },
+        "iv_fluids": {
+          "actual_mean": 0.17830132782531724,
+          "count": 3389,
+          "mae": 0.6374523840713691,
+          "predicted_mean": 0.17809582473940638,
+          "r2": 0.04662545651550498,
+          "rmse": 0.9023245248556426
+        },
+        "maintain": {
+          "actual_mean": -0.2020047948803668,
+          "count": 20939,
+          "mae": 0.49358427229710666,
+          "predicted_mean": -0.2021203877969842,
+          "r2": 0.017068089047227897,
+          "rmse": 0.7343379471895289
+        }
+      }
     }
   },
   "model_type": "per_action_ridge_t_learner",

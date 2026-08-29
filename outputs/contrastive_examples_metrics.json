@@ -1,0 +1,88 @@
+{
+  "candidates_before_balance_by_preferred_action": {
+    "escalate_vasopressor": 405,
+    "iv_fluids": 10,
+    "maintain": 0
+  },
+  "config": {
+    "cross_validation_folds": 5,
+    "diagnostics_path": "outputs/contrastive_examples_metrics.json",
+    "examples_path": "outputs/contrastive_examples.csv",
+    "max_examples_per_action": 100,
+    "maximum_value_disagreement": 0.5,
+    "minimum_advantage": 0.1,
+    "minimum_examples_per_action": 10,
+    "minimum_logged_reward": 0.0,
+    "minimum_propensity": 0.02,
+    "random_seed": 42,
+    "require_preferred_matches_logged": true
+  },
+  "map_below_65": {
+    "rate": 0.09090909090909091,
+    "rows": 10,
+    "source_rate": 0.06095238095238095
+  },
+  "near_negative_propensity": {
+    "max": 0.9051651046136018,
+    "median": 0.13875511940723778,
+    "min": 0.029724687335176688,
+    "p25": 0.10925319470480685,
+    "p75": 0.20193496671749772
+  },
+  "policy_improvement_readiness": {
+    "approved": false,
+    "minimum_examples_per_action": 10,
+    "reason": "Candidate library lacks action-balanced model support.",
+    "underrepresented_actions": [
+      "maintain"
+    ]
+  },
+  "preferred_matches_logged_rate": 1.0,
+  "preferred_propensity": {
+    "max": 0.20184717578296663,
+    "median": 0.04027850510494889,
+    "min": 0.020759288738275844,
+    "p25": 0.029142557362714767,
+    "p75": 0.0710492711898085
+  },
+  "robust_advantage": {
+    "max": 0.8975717715049012,
+    "median": 0.49618332350729655,
+    "min": 0.10158922169885765,
+    "p25": 0.427864157171678,
+    "p75": 0.5899616339949181
+  },
+  "selected_by_preferred_action": {
+    "escalate_vasopressor": 100,
+    "iv_fluids": 10,
+    "maintain": 0
+  },
+  "selection_stages": {
+    "agreed_preferred_action_is_supported": 19617,
+    "at_least_two_supported_actions": 25200,
+    "both_advantages_clear_margin": 14546,
+    "candidates_before_balance": 415,
+    "logged_reward_clears_threshold": 415,
+    "models_agree_on_preferred_action": 19999,
+    "preferred_matches_logged_action": 509,
+    "selected_examples": 110,
+    "source_rows": 25200,
+    "value_disagreement_within_limit": 17597
+  },
+  "thresholds": {
+    "max_examples_per_action": 100,
+    "maximum_value_disagreement": 0.5,
+    "minimum_advantage": 0.1,
+    "minimum_examples_per_action": 10,
+    "minimum_logged_reward": 0.0,
+    "minimum_propensity": 0.02,
+    "require_preferred_matches_logged": true
+  },
+  "value_disagreement": {
+    "max": 0.49521642629829676,
+    "median": 0.22112076191953736,
+    "min": 0.02002526504798511,
+    "p25": 0.15144027728251525,
+    "p75": 0.35120167090144094
+  }
+}

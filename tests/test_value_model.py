@@ -6,6 +6,7 @@ from prompts import ACTION_NAMES, OBSERVATION_COLUMNS
 from value_model import (
     ActionRewardModel,
     action_support_mask,
+    compare_action_reward_models,
     cross_validate_action_reward_model,
     patient_group_value_folds,
 )
@@ -43,6 +44,18 @@ def test_action_reward_model_returns_canonical_value_matrix():
     assert values.shape == (4, len(ACTION_NAMES))
     assert np.isfinite(values).all()
     assert tuple(model.models) == ACTION_NAMES
+
+
+def test_nonlinear_action_reward_model_returns_finite_values():
+    trajectories = make_training_data()
+    model = ActionRewardModel(
+        model_type="hist_gradient_boosting", max_iter=10
+    ).fit(trajectories)
+
+    values = model.predict_values(trajectories.iloc[:4])
+
+    assert values.shape == (4, len(ACTION_NAMES))
+    assert np.isfinite(values).all()
 
 
 def test_logged_value_predictions_select_the_logged_action_column():
@@ -99,6 +112,27 @@ def test_cross_validation_reports_factual_per_action_metrics():
     assert np.isfinite(list(diagnostics["overall"].values())).all()
     assert diagnostics["map_below_65_slice"]["true"]["rows"] > 0
     assert "counterfactual" in diagnostics["counterfactual_warning"]
+
+
+def test_model_comparison_uses_common_metrics_and_reports_deltas():
+    comparison = compare_action_reward_models(
+        make_training_data(),
+        n_splits=3,
+        model_configs={
+            "ridge": {"model_type": "ridge", "alpha": 1.0},
+            "nonlinear": {
+                "model_type": "hist_gradient_boosting",
+                "max_iter": 10,
+            },
+        },
+    )
+
+    assert comparison["baseline"] == "ridge"
+    assert set(comparison["models"]) == {"ridge", "nonlinear"}
+    deltas = comparison["deltas_vs_baseline"]["nonlinear"]
+    assert set(deltas["overall"]) == {"rmse", "mae", "r2"}
+    assert set(deltas["per_action"]) == set(ACTION_NAMES)
+    assert set(deltas["map_below_65"]) == {"rmse", "mae", "r2"}
 
 
 def test_support_mask_hides_weakly_supported_action_values():

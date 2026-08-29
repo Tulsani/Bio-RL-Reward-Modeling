@@ -1,7 +1,21 @@
 {
-  "model_type": "per_action_ridge_t_learner",
   "estimand": "one_step_expected_reward",
-  "alpha": 1.0,
+  "selected_model": "ridge",
+  "baseline_model": "ridge",
+  "models": {
+    "ridge": {
+      "model_type": "ridge",
+      "alpha": 1.0
+    },
+    "hist_gradient_boosting": {
+      "model_type": "hist_gradient_boosting",
+      "learning_rate": 0.05,
+      "max_iter": 200,
+      "max_leaf_nodes": 15,
+      "min_samples_leaf": 20,
+      "l2_regularization": 1.0
+    }
+  },
   "cross_validation_folds": 5,
   "random_seed": 42,
   "minimum_support_propensity": 0.02,

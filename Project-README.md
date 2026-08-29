@@ -322,9 +322,35 @@ The predicted overall reward mean is -0.128 versus an observed mean of -0.127, b
 
 `predict_values` returns modeled rewards for all actions in canonical order, while `predict_logged_values` selects only the factual action prediction. Values for unlogged actions are explicitly counterfactual model estimates. `predict_supported_values` masks any action whose estimated behavior propensity is below a configured threshold (currently 0.02); passing this threshold does not make the estimate causal or guarantee adequate overlap.
 
-Before using action rankings to improve the LLM policy, we will compare a regularized nonlinear outcome model under the same patient-grouped folds. We will require improvement in held-out factual error, inspect per-action and low-MAP performance, and restrict contrastive pairs to actions with adequate behavior support. Machine-readable diagnostics are stored in `outputs/value_model_metrics.json`; the regenerable fitted artifact is Git-ignored at `artifacts/action_reward_model.joblib`.
+A regularized histogram gradient-boosting T-learner was compared with ridge using identical patient-grouped folds, features, and targets:
 
-## 10. Tests and Statistical Checks
+| Slice | Ridge RMSE | Nonlinear RMSE | Ridge $R^2$ | Nonlinear $R^2$ |
+| --- | ---: | ---: | ---: | ---: |
+| Overall | 0.764 | 0.767 | 0.068 | 0.061 |
+| `maintain` | 0.734 | 0.732 | 0.017 | 0.023 |
+| `iv_fluids` | 0.902 | 0.918 | 0.047 | 0.014 |
+| `escalate_vasopressor` | 0.862 | 0.918 | -0.018 | -0.155 |
+| MAP below 65 | 1.052 | 1.020 | 0.076 | 0.131 |
+
+The nonlinear model improves the low-MAP slice and slightly improves `maintain`, but it is worse overall and degrades both intervention actions, especially the rare vasopressor action. Ridge therefore remains the selected artifact; gradient boosting is retained as a sensitivity comparison. Neither model is strong enough to justify unconstrained counterfactual action rankings. Contrastive-example construction must require behavior support and should later test whether model rankings agree across specifications. Machine-readable diagnostics are stored in `outputs/value_model_metrics.json`; the regenerable fitted artifact is Git-ignored at `artifacts/action_reward_model.joblib`.
+
+## 10. Contrastive Candidate Generation (`contrastive_examples.py`)
+
+Contrastive candidates are constructed entirely from the training split. Five patient-grouped folds generate out-of-fold behavior probabilities and all-action predictions from both ridge and histogram gradient boosting. For a state to qualify, it must have at least two supported actions, both reward models must rank the same globally preferred action first, both model-specific advantages over the strongest supported alternative must exceed 0.10, and the two models' predictions for the compared actions must differ by at most 0.50.
+
+The first unconstrained audit exposed critic-driven intervention bias: 14,546 rows cleared model agreement and margin filters, but after per-action caps the library contained 100 vasopressor, 69 fluid, and zero maintain preferences. Only 8.9% of those preferences matched the factual logged action. This is consistent with the reward models relying heavily on marginal action differences and is not safe evidence for policy improvement.
+
+The default selector therefore also requires the preferred action to equal the factual logged action and requires its observed training reward to be non-negative. Raw outcomes and realized rewards are selection-only and are never exported into example observations or future prompts. With these safeguards, 415 candidates survive before capping:
+
+| Preferred action | Candidates before cap | Selected after cap |
+| --- | ---: | ---: |
+| `maintain` | 0 | 0 |
+| `iv_fluids` | 10 | 10 |
+| `escalate_vasopressor` | 405 | 100 |
+
+The selected candidates all match factual actions, their median preferred-action propensity is 0.040, and 9.1% have MAP below 65 versus 6.1% in the source data. However, the absence of maintain candidates and severe action imbalance trigger an explicit readiness failure. `policy_improvement_readiness.approved` is therefore `false`, and this file must not yet be used as an LLM demonstration library. This negative result is preserved in `outputs/contrastive_examples_metrics.json` rather than hidden by weakening thresholds or artificially relabeling actions.
+
+## 11. Tests and Statistical Checks
 
 Tests protect deterministic invariants; exploratory scripts report dataset statistics. Unit tests should not merely print descriptive tables.
 
@@ -402,7 +428,15 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - behavior-propensity support masking; and
 - exclusion of post-action fields from model features.
 
-Current status: 74 tests pass.
+`tests/test_contrastive_examples.py` checks:
+
+- complete cross-fitted estimates for every row and action;
+- support, agreement, advantage, and factual-action filters;
+- deterministic per-action caps and readiness failure;
+- exclusion of raw post-action outcomes from exported examples; and
+- strict training-only generation.
+
+Current status: 83 tests pass.
 
 ### Tests to add later
 
@@ -426,7 +460,7 @@ Current status: 74 tests pass.
 - zero-shot/improved agreement and disagreement patterns;
 - robustness flip rates and alternate-reward policy rankings.
 
-## 11. Working Policy-Improvement Hypothesis
+## 12. Working Policy-Improvement Hypothesis
 
 > This section is a hypothesis to test, not a claim that the method is already validated.
 
@@ -560,12 +594,12 @@ This would explicitly teach a context-sensitive boundary between plausible actio
 - Confidence intervals will resample complete patients.
 - We will report support failures and not treat critic preferences as ground truth.
 
-## 12. Immediate Implementation Order
+## 13. Immediate Implementation Order
 
 1. **Completed:** implement the zero-shot prompt, schema, deterministic fallback, and cache.
 2. **Policy interface completed:** select/connect the model backend, then cache $\pi_0(a\mid s)$ on training observations.
-3. **Linear behavior and reward-model baselines completed:** compare nonlinear specifications before using either model for policy improvement or DR.
-4. Generate audited supported positive/near-negative training pairs.
+3. **Behavior and reward-model baselines completed:** ridge and nonlinear reward models were compared; keep support restrictions and model-specification sensitivity in downstream policy improvement and DR.
+4. **Contrastive candidate generator completed, readiness gate failed:** do not use the current intervention-skewed candidates as demonstrations; revise the improvement method or nuisance models first.
 5. Implement the improved policy using retrieved contrastive examples.
 6. Build direct-method and doubly robust evaluation with patient-level bootstrap intervals.
 7. Run robustness and alternate-reward stress tests.
