@@ -1,0 +1,121 @@
+{
+  "actions": [
+    "maintain",
+    "iv_fluids",
+    "escalate_vasopressor"
+  ],
+  "config": {
+    "alpha": 1.0,
+    "artifact_path": "artifacts/action_reward_model.joblib",
+    "cross_validation_folds": 5,
+    "estimand": "one_step_expected_reward",
+    "metrics_path": "outputs/value_model_metrics.json",
+    "minimum_support_propensity": 0.02,
+    "model_type": "per_action_ridge_t_learner",
+    "random_seed": 42
+  },
+  "counterfactual_warning": "Only logged-action predictions are validated. Other action values are modeled counterfactual estimates and require support checks.",
+  "estimand": "one_step_expected_reward",
+  "folds": [
+    {
+      "fold": 1,
+      "mae": 0.5188998130154707,
+      "r2": 0.08398430809261359,
+      "rmse": 0.7604887931652397,
+      "train_patients": 1680,
+      "validation_patients": 420,
+      "validation_rows": 5040
+    },
+    {
+      "fold": 2,
+      "mae": 0.5242978236679914,
+      "r2": 0.05479141863688852,
+      "rmse": 0.7811910543259473,
+      "train_patients": 1679,
+      "validation_patients": 421,
+      "validation_rows": 5052
+    },
+    {
+      "fold": 3,
+      "mae": 0.5120684999683892,
+      "r2": 0.0652120805903158,
+      "rmse": 0.7581912693874344,
+      "train_patients": 1681,
+      "validation_patients": 419,
+      "validation_rows": 5028
+    },
+    {
+      "fold": 4,
+      "mae": 0.5205434592783102,
+      "r2": 0.07194913395729685,
+      "rmse": 0.7640761932982648,
+      "train_patients": 1679,
+      "validation_patients": 421,
+      "validation_rows": 5052
+    },
+    {
+      "fold": 5,
+      "mae": 0.5135526795277644,
+      "r2": 0.06241522485535245,
+      "rmse": 0.7543808412874382,
+      "train_patients": 1681,
+      "validation_patients": 419,
+      "validation_rows": 5028
+    }
+  ],
+  "map_below_65_slice": {
+    "false": {
+      "actual_mean": -0.13245676132521975,
+      "mae": 0.5052179472316893,
+      "predicted_mean": -0.1402192764345203,
+      "r2": 0.06613604461372391,
+      "rmse": 0.7411674747324208,
+      "rows": 23664
+    },
+    "true": {
+      "actual_mean": -0.049584895833333316,
+      "mae": 0.7129811238663103,
+      "predicted_mean": 0.06784372535701173,
+      "r2": 0.07580346405558913,
+      "rmse": 1.0519472504864573,
+      "rows": 1536
+    }
+  },
+  "model_type": "per_action_ridge_t_learner",
+  "n_splits": 5,
+  "overall": {
+    "actual_mean": -0.1274055238095238,
+    "mae": 0.5178816075217996,
+    "predicted_mean": -0.12753734108722692,
+    "r2": 0.06785019979545337,
+    "rmse": 0.7637380313659051
+  },
+  "patients": 2100,
+  "per_action": {
+    "escalate_vasopressor": {
+      "actual_mean": 0.47579816513761475,
+      "count": 872,
+      "mae": 0.6366161723650954,
+      "predicted_mean": 0.4755631360562915,
+      "r2": -0.01824611613214322,
+      "rmse": 0.8622851031352365
+    },
+    "iv_fluids": {
+      "actual_mean": 0.17830132782531724,
+      "count": 3389,
+      "mae": 0.6374523840713691,
+      "predicted_mean": 0.17809582473940638,
+      "r2": 0.04662545651550498,
+      "rmse": 0.9023245248556426
+    },
+    "maintain": {
+      "actual_mean": -0.2020047948803668,
+      "count": 20939,
+      "mae": 0.49358427229710666,
+      "predicted_mean": -0.2021203877969842,
+      "r2": 0.017068089047227897,
+      "rmse": 0.7343379471895289
+    }
+  },
+  "rows": 25200
+}

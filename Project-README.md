@@ -298,7 +298,33 @@ We treat this model as a useful first behavior-policy baseline, but not as safe 
 
 The fitted artifact is regenerable and Git-ignored at `artifacts/behavior_policy.joblib`. Machine-readable out-of-fold metrics are stored in `outputs/behavior_model_metrics.json`.
 
-## 9. Tests and Statistical Checks
+## 9. Action-Conditioned Reward Model (`value_model.py`)
+
+The first value-model baseline estimates the one-step conditional reward
+
+$$
+\hat m(s,a) \approx \mathbb{E}[r_t\mid s_t=s,a_t=a].
+$$
+
+It is deliberately not described as a full $Q^\pi$: it does not yet include discounted future rewards or bootstrap through a target policy. `ActionRewardModel` is a T-learner with one ridge-regression pipeline per action, allowing state coefficients to differ across treatments. Each pipeline uses only the 19 pre-action observation fields, with median imputation and standardization for numeric variables and most-frequent imputation plus one-hot encoding for categorical variables.
+
+Five-fold patient-grouped cross-validation evaluates only factual logged-action predictions. Training-only results are:
+
+| Slice | Rows | RMSE | MAE | $R^2$ |
+| --- | ---: | ---: | ---: | ---: |
+| Overall | 25,200 | 0.764 | 0.518 | 0.068 |
+| `maintain` | 20,939 | 0.734 | 0.494 | 0.017 |
+| `iv_fluids` | 3,389 | 0.902 | 0.637 | 0.047 |
+| `escalate_vasopressor` | 872 | 0.862 | 0.637 | -0.018 |
+| MAP below 65 | 1,536 | 1.052 | 0.713 | 0.076 |
+
+The predicted overall reward mean is -0.128 versus an observed mean of -0.127, but matching a marginal mean is not sufficient. The low within-action $R^2$ values show that this linear model learns some average action differences while explaining little patient-level reward variation. In particular, the negative escalation $R^2$ means it performs worse than the action-specific mean for those factual rows. We therefore retain it as an interpretable benchmark, not as the final critic for contrastive-example selection.
+
+`predict_values` returns modeled rewards for all actions in canonical order, while `predict_logged_values` selects only the factual action prediction. Values for unlogged actions are explicitly counterfactual model estimates. `predict_supported_values` masks any action whose estimated behavior propensity is below a configured threshold (currently 0.02); passing this threshold does not make the estimate causal or guarantee adequate overlap.
+
+Before using action rankings to improve the LLM policy, we will compare a regularized nonlinear outcome model under the same patient-grouped folds. We will require improvement in held-out factual error, inspect per-action and low-MAP performance, and restrict contrastive pairs to actions with adequate behavior support. Machine-readable diagnostics are stored in `outputs/value_model_metrics.json`; the regenerable fitted artifact is Git-ignored at `artifacts/action_reward_model.joblib`.
+
+## 10. Tests and Statistical Checks
 
 Tests protect deterministic invariants; exploratory scripts report dataset statistics. Unit tests should not merely print descriptive tables.
 
@@ -367,7 +393,16 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - support and calibration diagnostic structure;
 - exclusion of post-action fields from model features.
 
-Current status: 64 tests pass.
+`tests/test_value_model.py` checks:
+
+- canonical action-value ordering and factual logged-action selection;
+- missing values and unseen categorical levels;
+- strict training-only fitting and patient-disjoint folds;
+- factual overall, per-action, and low-MAP diagnostics;
+- behavior-propensity support masking; and
+- exclusion of post-action fields from model features.
+
+Current status: 74 tests pass.
 
 ### Tests to add later
 
@@ -391,7 +426,7 @@ Current status: 64 tests pass.
 - zero-shot/improved agreement and disagreement patterns;
 - robustness flip rates and alternate-reward policy rankings.
 
-## 10. Working Policy-Improvement Hypothesis
+## 11. Working Policy-Improvement Hypothesis
 
 > This section is a hypothesis to test, not a claim that the method is already validated.
 
@@ -525,11 +560,11 @@ This would explicitly teach a context-sensitive boundary between plausible actio
 - Confidence intervals will resample complete patients.
 - We will report support failures and not treat critic preferences as ground truth.
 
-## 11. Immediate Implementation Order
+## 12. Immediate Implementation Order
 
 1. **Completed:** implement the zero-shot prompt, schema, deterministic fallback, and cache.
 2. **Policy interface completed:** select/connect the model backend, then cache $\pi_0(a\mid s)$ on training observations.
-3. **Behavior baseline completed:** compare a nonlinear sensitivity model and implement the action critic.
+3. **Linear behavior and reward-model baselines completed:** compare nonlinear specifications before using either model for policy improvement or DR.
 4. Generate audited supported positive/near-negative training pairs.
 5. Implement the improved policy using retrieved contrastive examples.
 6. Build direct-method and doubly robust evaluation with patient-level bootstrap intervals.

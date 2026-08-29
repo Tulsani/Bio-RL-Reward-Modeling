@@ -1,0 +1,10 @@
+{
+  "model_type": "per_action_ridge_t_learner",
+  "estimand": "one_step_expected_reward",
+  "alpha": 1.0,
+  "cross_validation_folds": 5,
+  "random_seed": 42,
+  "minimum_support_propensity": 0.02,
+  "artifact_path": "artifacts/action_reward_model.joblib",
+  "metrics_path": "outputs/value_model_metrics.json"
+}
