@@ -252,7 +252,53 @@ All policies implement `predict_proba(observations)` and return an $[N,3]$ NumPy
 
 The policy accumulates cache-hit, structured-output-failure, fallback, and failure-reason diagnostics across calls and supports explicitly resetting those metrics. It also rejects a client configured with a prompt version other than `zero_shot_v1`, preventing cache and policy-version drift.
 
-## 8. Tests and Statistical Checks
+## 8. Behavior Policy Model (`behavior_model.py`)
+
+The behavior model estimates the logged action propensity $\hat b(a\mid s)$; it does not recommend an optimal action. It uses only the 19 allowed pre-action observation fields. Numeric values receive median imputation and standardization, categorical values receive most-frequent imputation and one-hot encoding, and multinomial logistic regression produces probabilities in canonical action order.
+
+Class weighting is intentionally disabled. Rebalancing rare actions would distort the natural behavior probabilities required for support diagnostics and importance ratios. Model diagnostics use five stratified patient-grouped folds, so no patient's rows appear in both fit and held-out portions of a fold.
+
+Training-only out-of-fold results are:
+
+| Metric | Value |
+| --- | ---: |
+| Log loss | 0.536 |
+| Multiclass Brier score | 0.288 |
+| Accuracy | 83.1% |
+| Macro-F1 | 0.303 |
+| Top-label ECE | 0.0025 |
+
+Mean predicted probabilities closely match the observed action rates: 83.09% vs 83.09% for `maintain`, 13.45% vs 13.45% for `iv_fluids`, and 3.47% vs 3.46% for escalation. However, the argmax action is `maintain` for every row, showing why accuracy and aggregate calibration are insufficient diagnostics for this imbalanced propensity problem.
+
+Per-action diagnostics expose the rare-action support more clearly:
+
+| Logged action | Count | Mean logged propensity | Median logged propensity | 5th percentile |
+| --- | ---: | ---: | ---: | ---: |
+| `maintain` | 20,939 | 0.8322 | 0.8364 | 0.7758 |
+| `iv_fluids` | 3,389 | 0.1405 | 0.1341 | 0.0964 |
+| `escalate_vasopressor` | 872 | 0.0400 | 0.0326 | 0.0220 |
+
+The logged-action propensity across all rows has minimum 0.014, 1st percentile 0.028, and 5th percentile 0.107. This matters because doubly robust evaluation uses the importance ratio
+
+$$
+w_i = \frac{\pi(a_i\mid s_i)}{\hat b(a_i\mid s_i)}.
+$$
+
+A denominator of 0.014 can produce a ratio near 70 if the target policy assigns that logged action probability one. Even a target vasopressor probability of 0.30 can produce ratios around 9--14 for many logged vasopressor decisions.
+
+Conditional calibration is also weaker than the aggregate numbers suggest. In the `map_mm_hg < 65` slice, the model predicts 76.0% maintain, 18.8% fluids, and 5.1% escalation, compared with observed rates of 67.9%, 25.5%, and 6.6%. Therefore, the low ECE and close agreement in overall action frequencies must not be interpreted as proof that state-conditional propensities are accurate.
+
+We treat this model as a useful first behavior-policy baseline, but not as safe for unrestricted DR estimation. Before reporting DR results, evaluation must include:
+
+- importance-ratio clipping, with at least $w_{\max}=10$ and $20$ as sensitivity settings;
+- effective sample size, maximum weight, and the fraction of weights clipped;
+- weight and estimate diagnostics broken down by action, especially vasopressor escalation;
+- a comparison against a nonlinear behavior-model specification; and
+- patient-level bootstrap intervals and explicit discussion of remaining overlap limitations.
+
+The fitted artifact is regenerable and Git-ignored at `artifacts/behavior_policy.joblib`. Machine-readable out-of-fold metrics are stored in `outputs/behavior_model_metrics.json`.
+
+## 9. Tests and Statistical Checks
 
 Tests protect deterministic invariants; exploratory scripts report dataset statistics. Unit tests should not merely print descriptive tables.
 
@@ -311,7 +357,17 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - empty choices and invalid response content;
 - generation-limit validation using a fake client without network calls.
 
-Current status: 56 tests pass.
+`tests/test_behavior_model.py` checks:
+
+- canonical action-probability ordering and normalization;
+- missing values and unseen categorical levels;
+- strict training-only fitting;
+- unweighted natural class probabilities;
+- patient-disjoint folds;
+- support and calibration diagnostic structure;
+- exclusion of post-action fields from model features.
+
+Current status: 64 tests pass.
 
 ### Tests to add later
 
@@ -335,7 +391,7 @@ Current status: 56 tests pass.
 - zero-shot/improved agreement and disagreement patterns;
 - robustness flip rates and alternate-reward policy rankings.
 
-## 9. Working Policy-Improvement Hypothesis
+## 10. Working Policy-Improvement Hypothesis
 
 > This section is a hypothesis to test, not a claim that the method is already validated.
 
@@ -469,11 +525,11 @@ This would explicitly teach a context-sensitive boundary between plausible actio
 - Confidence intervals will resample complete patients.
 - We will report support failures and not treat critic preferences as ground truth.
 
-## 10. Immediate Implementation Order
+## 11. Immediate Implementation Order
 
 1. **Completed:** implement the zero-shot prompt, schema, deterministic fallback, and cache.
 2. **Policy interface completed:** select/connect the model backend, then cache $\pi_0(a\mid s)$ on training observations.
-3. Implement the behavior classifier and action critic.
+3. **Behavior baseline completed:** compare a nonlinear sensitivity model and implement the action critic.
 4. Generate audited supported positive/near-negative training pairs.
 5. Implement the improved policy using retrieved contrastive examples.
 6. Build direct-method and doubly robust evaluation with patient-level bootstrap intervals.

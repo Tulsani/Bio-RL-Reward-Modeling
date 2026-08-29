@@ -1,0 +1,10 @@
+{
+  "model_type": "multinomial_logistic_regression",
+  "regularization_c": 1.0,
+  "max_iter": 2000,
+  "class_weight": null,
+  "cross_validation_folds": 5,
+  "random_seed": 42,
+  "artifact_path": "artifacts/behavior_policy.joblib",
+  "metrics_path": "outputs/behavior_model_metrics.json"
+}

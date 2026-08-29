@@ -1,0 +1,161 @@
+{
+  "actions": [
+    "maintain",
+    "iv_fluids",
+    "escalate_vasopressor"
+  ],
+  "argmax_action_rates": {
+    "escalate_vasopressor": 0.0,
+    "iv_fluids": 0.0,
+    "maintain": 1.0
+  },
+  "class_weight": null,
+  "config": {
+    "artifact_path": "artifacts/behavior_policy.joblib",
+    "class_weight": null,
+    "cross_validation_folds": 5,
+    "max_iter": 2000,
+    "metrics_path": "outputs/behavior_model_metrics.json",
+    "model_type": "multinomial_logistic_regression",
+    "random_seed": 42,
+    "regularization_c": 1.0
+  },
+  "folds": [
+    {
+      "accuracy": 0.830952380952381,
+      "fold": 1,
+      "log_loss": 0.535623683000662,
+      "macro_f1": 0.3025574338968357,
+      "multiclass_brier": 0.2883200543384194,
+      "top_label_ece": 0.002104371980922986,
+      "train_patients": 1680,
+      "validation_patients": 420,
+      "validation_rows": 5040
+    },
+    {
+      "accuracy": 0.8305621536025336,
+      "fold": 2,
+      "log_loss": 0.5354334988208685,
+      "macro_f1": 0.302479815455594,
+      "multiclass_brier": 0.28863253745945466,
+      "top_label_ece": 0.006157227795060244,
+      "train_patients": 1679,
+      "validation_patients": 421,
+      "validation_rows": 5052
+    },
+    {
+      "accuracy": 0.8315433571996818,
+      "fold": 3,
+      "log_loss": 0.5369183372284438,
+      "macro_f1": 0.3026749194628443,
+      "multiclass_brier": 0.2886202494115198,
+      "top_label_ece": 0.005949729864058787,
+      "train_patients": 1681,
+      "validation_patients": 419,
+      "validation_rows": 5028
+    },
+    {
+      "accuracy": 0.8303642121931908,
+      "fold": 4,
+      "log_loss": 0.5379466062994475,
+      "macro_f1": 0.3024404311308172,
+      "multiclass_brier": 0.2893963820458224,
+      "top_label_ece": 0.0023243114089394053,
+      "train_patients": 1679,
+      "validation_patients": 421,
+      "validation_rows": 5052
+    },
+    {
+      "accuracy": 0.831145584725537,
+      "fold": 5,
+      "log_loss": 0.533234097198981,
+      "macro_f1": 0.3025958509829478,
+      "multiclass_brier": 0.28728656406142283,
+      "top_label_ece": 0.010089737225306598,
+      "train_patients": 1681,
+      "validation_patients": 419,
+      "validation_rows": 5028
+    }
+  ],
+  "logged_action_propensity": {
+    "mean": 0.7117930940804613,
+    "median": 0.8297703604872622,
+    "min": 0.014317273189628261,
+    "p01": 0.02802460590591978,
+    "p05": 0.10714614060062108
+  },
+  "map_below_65_slice": {
+    "false": {
+      "mean_predicted_probabilities": {
+        "escalate_vasopressor": 0.033585169069728436,
+        "iv_fluids": 0.13096442838406036,
+        "maintain": 0.8354504025462112
+      },
+      "observed_action_rates": {
+        "escalate_vasopressor": 0.03253887762001352,
+        "iv_fluids": 0.12669033130493576,
+        "maintain": 0.8407707910750507
+      },
+      "rows": 23664
+    },
+    "true": {
+      "mean_predicted_probabilities": {
+        "escalate_vasopressor": 0.05121835819446082,
+        "iv_fluids": 0.18839427207760903,
+        "maintain": 0.7603873697279302
+      },
+      "observed_action_rates": {
+        "escalate_vasopressor": 0.06640625,
+        "iv_fluids": 0.2545572916666667,
+        "maintain": 0.6790364583333334
+      },
+      "rows": 1536
+    }
+  },
+  "mean_predicted_probabilities": {
+    "escalate_vasopressor": 0.034659953930664504,
+    "iv_fluids": 0.13446491409490524,
+    "maintain": 0.8308751319744304
+  },
+  "n_splits": 5,
+  "observed_action_rates": {
+    "escalate_vasopressor": 0.0346031746031746,
+    "iv_fluids": 0.13448412698412698,
+    "maintain": 0.8309126984126984
+  },
+  "overall": {
+    "accuracy": 0.8309126984126984,
+    "log_loss": 0.5358327814957248,
+    "macro_f1": 0.3025495423250034,
+    "multiclass_brier": 0.2884521679900099,
+    "top_label_ece": 0.002465293203675843
+  },
+  "patients": 2100,
+  "per_action": {
+    "escalate_vasopressor": {
+      "binary_brier": 0.03326375721955089,
+      "logged_count": 872,
+      "logged_propensity_mean": 0.040019281906958734,
+      "logged_propensity_median": 0.03257776767424332,
+      "logged_propensity_p05": 0.021982842690248847,
+      "one_vs_rest_ece": 0.0005708471011691634
+    },
+    "iv_fluids": {
+      "binary_brier": 0.11570779894588876,
+      "logged_count": 3389,
+      "logged_propensity_mean": 0.14045196701333457,
+      "logged_propensity_median": 0.13413574200962544,
+      "logged_propensity_p05": 0.09643097096800159,
+      "one_vs_rest_ece": 0.0035268308622065595
+    },
+    "maintain": {
+      "binary_brier": 0.13948061182457025,
+      "logged_count": 20939,
+      "logged_propensity_mean": 0.8322411500452059,
+      "logged_propensity_median": 0.8364296565486712,
+      "logged_propensity_p05": 0.7757516987890103,
+      "one_vs_rest_ece": 0.002465293203675843
+    }
+  },
+  "rows": 25200
+}
