@@ -1,0 +1,11 @@
+{
+  "cross_validation_folds": 5,
+  "random_seed": 42,
+  "lower_reward_quantile": 0.25,
+  "upper_reward_quantile": 0.75,
+  "minimum_logged_propensity": 0.02,
+  "max_examples_per_cell": 100,
+  "minimum_examples_per_cell": 20,
+  "library_path": "outputs/factual_outcome_examples.csv",
+  "diagnostics_path": "outputs/factual_outcome_examples_metrics.json"
+}

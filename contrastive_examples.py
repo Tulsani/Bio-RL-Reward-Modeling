@@ -278,6 +278,207 @@ def build_contrastive_examples(
     return selected, diagnostics
 
 
+def diagnose_action_reward_bias(
+    trajectories: pd.DataFrame,
+    estimates: CrossFittedEstimates,
+) -> dict[str, Any]:
+    """Diagnose action-ranking bias using training-only cross-fitted estimates."""
+    _validate_training_trajectories(trajectories)
+    estimates.validate(len(trajectories))
+    rewards = _logged_rewards(trajectories)
+    actions = trajectories[LOGGED_ACTION_COLUMN].to_numpy()
+    maintain_index = ACTION_NAMES.index("maintain")
+    intervention_indices = np.array(
+        [ACTION_NAMES.index("iv_fluids"), ACTION_NAMES.index("escalate_vasopressor")]
+    )
+    top_indices = {
+        name: values.argmax(axis=1)
+        for name, values in estimates.action_values.items()
+    }
+    top_actions = {
+        name: np.asarray(ACTION_NAMES)[indices]
+        for name, indices in top_indices.items()
+    }
+    maintain_rows = actions == "maintain"
+    agreed_top = top_indices[RIDGE_MODEL] == top_indices[NONLINEAR_MODEL]
+
+    return {
+        "data_scope": "training_only_cross_fitted",
+        "rows": len(trajectories),
+        "patients": int(trajectories[PATIENT_ID_COLUMN].nunique()),
+        "observed_reward_by_logged_action": {
+            action: {
+                "rows": int((actions == action).sum()),
+                **_reward_summary(rewards[actions == action]),
+            }
+            for action in ACTION_NAMES
+        },
+        "global_model_rankings": {
+            name: {
+                "top_action_rates": _action_rates(predicted),
+                "mean_modeled_value_by_action": {
+                    action: float(estimates.action_values[name][:, index].mean())
+                    for index, action in enumerate(ACTION_NAMES)
+                },
+                "top_action_behavior_propensity": _quantiles_array(
+                    estimates.behavior_probabilities[
+                        np.arange(len(trajectories)), top_indices[name]
+                    ]
+                ),
+                "top_action_propensity_below_0_02_rate": float(
+                    np.mean(
+                        estimates.behavior_probabilities[
+                            np.arange(len(trajectories)), top_indices[name]
+                        ]
+                        < 0.02
+                    )
+                ),
+            }
+            for name, predicted in top_actions.items()
+        },
+        "model_agreement": {
+            "top_action_agreement_rate": float(agreed_top.mean()),
+            "agreed_top_action_rates": _action_rates(
+                top_actions[RIDGE_MODEL][agreed_top]
+            ),
+        },
+        "logged_maintain_states": _maintain_diagnostics(
+            trajectories,
+            rewards,
+            maintain_rows,
+            estimates,
+            top_actions,
+            maintain_index,
+            intervention_indices,
+        ),
+        "logged_action_by_model_top_action": {
+            name: {
+                logged_action: _action_rates(predicted[actions == logged_action])
+                for logged_action in ACTION_NAMES
+            }
+            for name, predicted in top_actions.items()
+        },
+    }
+
+
+def _maintain_diagnostics(
+    trajectories: pd.DataFrame,
+    rewards: np.ndarray,
+    maintain_rows: np.ndarray,
+    estimates: CrossFittedEstimates,
+    top_actions: dict[str, np.ndarray],
+    maintain_index: int,
+    intervention_indices: np.ndarray,
+) -> dict[str, Any]:
+    lactate = trajectories["lactate_mmol_l"].to_numpy(dtype=float)
+    map_values = trajectories["map_mm_hg"].to_numpy(dtype=float)
+    vasopressor = trajectories["vasopressor_active_pre_action"].to_numpy()
+    slices = {
+        "map_below_65": map_values < 65.0,
+        "map_65_to_75": (map_values >= 65.0) & (map_values < 75.0),
+        "map_at_least_75": map_values >= 75.0,
+        "lactate_at_most_2": np.isfinite(lactate) & (lactate <= 2.0),
+        "lactate_above_2": np.isfinite(lactate) & (lactate > 2.0),
+        "lactate_missing": ~np.isfinite(lactate),
+        "vasopressor_inactive": vasopressor == 0,
+        "vasopressor_active": vasopressor == 1,
+    }
+    result: dict[str, Any] = {
+        "rows": int(maintain_rows.sum()),
+        "observed_reward": _reward_summary(rewards[maintain_rows]),
+        "models": {},
+        "state_slices": {},
+    }
+    for name, values in estimates.action_values.items():
+        top_indices = values.argmax(axis=1)
+        intervention_best = values[:, intervention_indices].max(axis=1)
+        margin = intervention_best - values[:, maintain_index]
+        top_propensity = estimates.behavior_probabilities[
+            np.arange(len(trajectories)), top_indices
+        ]
+        result["models"][name] = {
+            "top_action_rates": _action_rates(top_actions[name][maintain_rows]),
+            "intervention_minus_maintain_margin": _quantiles_array(
+                margin[maintain_rows]
+            ),
+            "maintain_ranked_top_rate": float(
+                np.mean(top_indices[maintain_rows] == maintain_index)
+            ),
+            "proposed_top_action_propensity": _quantiles_array(
+                top_propensity[maintain_rows]
+            ),
+            "proposed_top_action_propensity_below_0_02_rate": float(
+                np.mean(top_propensity[maintain_rows] < 0.02)
+            ),
+        }
+
+    for label, slice_mask in slices.items():
+        selected = maintain_rows & slice_mask
+        result["state_slices"][label] = _maintain_slice(
+            selected, rewards, estimates, top_actions, maintain_index, intervention_indices
+        )
+    return result
+
+
+def _maintain_slice(
+    selected: np.ndarray,
+    rewards: np.ndarray,
+    estimates: CrossFittedEstimates,
+    top_actions: dict[str, np.ndarray],
+    maintain_index: int,
+    intervention_indices: np.ndarray,
+) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "rows": int(selected.sum()),
+        "observed_reward": _reward_summary(rewards[selected]),
+        "models": {},
+    }
+    for name, values in estimates.action_values.items():
+        margin = values[:, intervention_indices].max(axis=1) - values[:, maintain_index]
+        result["models"][name] = {
+            "top_action_rates": _action_rates(top_actions[name][selected]),
+            "intervention_minus_maintain_margin": _quantiles_array(margin[selected]),
+        }
+    return result
+
+
+def _action_rates(actions: np.ndarray) -> dict[str, float]:
+    return {
+        action: float(np.mean(actions == action)) if len(actions) else 0.0
+        for action in ACTION_NAMES
+    }
+
+
+def _reward_summary(rewards: np.ndarray) -> dict[str, float | None]:
+    if not len(rewards):
+        return {
+            "mean": None,
+            "favorable_rate": None,
+            "p10": None,
+            "median": None,
+            "p90": None,
+        }
+    return {
+        "mean": float(np.mean(rewards)),
+        "favorable_rate": float(np.mean(rewards >= 0.0)),
+        "p10": float(np.quantile(rewards, 0.10)),
+        "median": float(np.median(rewards)),
+        "p90": float(np.quantile(rewards, 0.90)),
+    }
+
+
+def _quantiles_array(values: np.ndarray) -> dict[str, float | None]:
+    if not len(values):
+        return {"min": None, "p25": None, "median": None, "p75": None, "max": None}
+    return {
+        "min": float(np.min(values)),
+        "p25": float(np.quantile(values, 0.25)),
+        "median": float(np.median(values)),
+        "p75": float(np.quantile(values, 0.75)),
+        "max": float(np.max(values)),
+    }
+
+
 def _balance_candidates(
     candidates: pd.DataFrame, max_examples_per_action: int
 ) -> pd.DataFrame:

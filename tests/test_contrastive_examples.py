@@ -6,6 +6,7 @@ from contrastive_examples import (
     MODEL_NAMES,
     CrossFittedEstimates,
     build_contrastive_examples,
+    diagnose_action_reward_bias,
     generate_cross_fitted_estimates,
 )
 from prompts import ACTION_NAMES, OBSERVATION_COLUMNS
@@ -165,3 +166,19 @@ def test_contrastive_generation_rejects_validation_rows():
 
     with pytest.raises(ValueError, match="only the training split"):
         build_contrastive_examples(trajectories, make_estimates(trajectories))
+
+
+def test_action_bias_diagnostics_expose_intervention_preference():
+    trajectories = make_training_data()
+
+    diagnostics = diagnose_action_reward_bias(
+        trajectories, make_estimates(trajectories)
+    )
+
+    assert diagnostics["data_scope"] == "training_only_cross_fitted"
+    ridge = diagnostics["global_model_rankings"]["ridge"]
+    assert ridge["top_action_rates"]["escalate_vasopressor"] == 1.0
+    maintain = diagnostics["logged_maintain_states"]
+    assert maintain["rows"] == len(trajectories) / len(ACTION_NAMES)
+    assert maintain["models"]["ridge"]["maintain_ranked_top_rate"] == 0.0
+    assert maintain["state_slices"]["map_below_65"]["rows"] > 0

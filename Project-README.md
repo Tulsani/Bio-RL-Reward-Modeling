@@ -350,7 +350,51 @@ The default selector therefore also requires the preferred action to equal the f
 
 The selected candidates all match factual actions, their median preferred-action propensity is 0.040, and 9.1% have MAP below 65 versus 6.1% in the source data. However, the absence of maintain candidates and severe action imbalance trigger an explicit readiness failure. `policy_improvement_readiness.approved` is therefore `false`, and this file must not yet be used as an LLM demonstration library. This negative result is preserved in `outputs/contrastive_examples_metrics.json` rather than hidden by weakening thresholds or artificially relabeling actions.
 
-## 11. Tests and Statistical Checks
+### Maintain-bias diagnosis
+
+`scripts/analyze_action_bias.py` tests whether the missing maintain examples are caused by a narrow selection threshold or by the reward models themselves. It uses the same training-only cross-fitted estimates and reports global rankings, rankings on factual maintain rows, intervention-minus-maintain margins, proposed-action support, and MAP/lactate/vasopressor slices.
+
+The result rejects the current critic as a source of policy labels:
+
+| Diagnostic | Ridge | Nonlinear |
+| --- | ---: | ---: |
+| Maintain ranked first, all states | 0.00% | 0.58% |
+| Maintain ranked first, logged-maintain states | 0.00% | 0.60% |
+| Maintain ranked first on logged-maintain states with MAP at least 75 | 0.00% | 0.49% |
+| Median intervention-minus-maintain margin on logged-maintain states | 0.673 | 0.717 |
+| Median propensity of proposed top action on logged-maintain states | 0.031 | 0.033 |
+
+The two models agree on the top action for 79.4% of states, but 98.2% of those agreed actions are vasopressor escalation and none are maintain. Their agreement therefore reflects a shared action-level bias rather than independent corroboration. Their mean modeled values closely reproduce the marginal action reward ordering—approximately -0.20 for maintain, +0.16 for fluids, and +0.47 to +0.48 for escalation—while their low factual within-action $R^2$ shows little ability to personalize those differences.
+
+This failure persists in apparently stable slices and is not repaired by support filtering: the median behavior propensity of the proposed action on factual maintain rows is only about 0.03. We will retain these diagnostics in `outputs/action_bias_diagnostics.json`, reject critic-derived optimal-action demonstrations, and move to factual state-matched outcome context. No validation data were used for this decision.
+
+## 11. Factual State-Matched Outcome Context (`factual_examples.py`)
+
+The replacement example library does not assign optimal actions or invent counterfactual outcomes. It partitions factual logged transitions into favorable and unfavorable outcomes relative to the reward distribution within each action:
+
+$$
+D_a^+ = \{(s_i,a_i): a_i=a,\ r_i \ge q_{0.75}(r\mid a)\},
+\qquad
+D_a^- = \{(s_i,a_i): a_i=a,\ r_i \le q_{0.25}(r\mid a)\}.
+$$
+
+The action-specific thresholds are:
+
+| Logged action | Unfavorable threshold | Favorable threshold |
+| --- | ---: | ---: |
+| `maintain` | reward at most -0.349 | reward at least 0.226 |
+| `iv_fluids` | reward at most 0.068 | reward at least 0.725 |
+| `escalate_vasopressor` | reward at most 0.325 | reward at least 1.036 |
+
+These labels mean better or worse **within the same logged action**. A favorable maintain outcome is not asserted to be counterfactually better than fluids or escalation. Each row must have cross-fitted logged-action propensity of at least 0.02, and each action/outcome cell is capped at one row per source patient before taking its 100 highest-priority examples.
+
+The resulting library contains 600 rows from 517 unique patients, with exactly 100 factual examples in each of the six action/outcome cells. Logged-action propensity ranges from 0.021 to 0.900 with median 0.149, so the prior zero-maintain failure is removed without changing labels. Coverage readiness passes, but this only means all six retrieval cells are populated; it does not validate policy improvement.
+
+`FactualExampleRetriever` standardizes and median-imputes numeric observations, one-hot encodes categorical observations, and retrieves the nearest examples independently from every action/outcome cell. Patient exclusion is supported for training-time diagnostics. Before prompt construction, `prompt_safe_factual_records` strips reward values, propensities, retrieval distances, source IDs, fold IDs, and other provenance, leaving only allowed pre-action state, factual logged action, and the relative outcome label.
+
+Equal cell sampling intentionally does not represent action prevalence. The library contains 21.5% MAP-below-65 rows versus 6.1% in the source data, largely because intervention cases are oversampled. The improved prompt must describe the examples as balanced evidence, never as empirical action frequencies, and the final policy must be checked for intervention-rate shifts. This library and its diagnostics are stored in `outputs/factual_outcome_examples.csv` and `outputs/factual_outcome_examples_metrics.json`. No validation data were used.
+
+## 12. Tests and Statistical Checks
 
 Tests protect deterministic invariants; exploratory scripts report dataset statistics. Unit tests should not merely print descriptive tables.
 
@@ -434,9 +478,19 @@ Tests protect deterministic invariants; exploratory scripts report dataset stati
 - support, agreement, advantage, and factual-action filters;
 - deterministic per-action caps and readiness failure;
 - exclusion of raw post-action outcomes from exported examples; and
+- strict training-only generation; and
+- maintain/intervention ranking-bias diagnostics.
+
+`tests/test_factual_examples.py` checks:
+
+- complete patient-grouped cross-fitted behavior context;
+- equal coverage of every factual action/outcome cell;
+- behavior-support filtering and readiness failure for missing cells;
+- state-matched retrieval with source-patient exclusion;
+- removal of rewards, post-action outcomes, support metadata, and provenance before prompting; and
 - strict training-only generation.
 
-Current status: 83 tests pass.
+Current status: 91 tests pass.
 
 ### Tests to add later
 
@@ -460,7 +514,7 @@ Current status: 83 tests pass.
 - zero-shot/improved agreement and disagreement patterns;
 - robustness flip rates and alternate-reward policy rankings.
 
-## 12. Working Policy-Improvement Hypothesis
+## 13. Working Policy-Improvement Hypothesis
 
 > This section is a hypothesis to test, not a claim that the method is already validated.
 
@@ -594,13 +648,13 @@ This would explicitly teach a context-sensitive boundary between plausible actio
 - Confidence intervals will resample complete patients.
 - We will report support failures and not treat critic preferences as ground truth.
 
-## 13. Immediate Implementation Order
+## 14. Immediate Implementation Order
 
 1. **Completed:** implement the zero-shot prompt, schema, deterministic fallback, and cache.
 2. **Policy interface completed:** select/connect the model backend, then cache $\pi_0(a\mid s)$ on training observations.
 3. **Behavior and reward-model baselines completed:** ridge and nonlinear reward models were compared; keep support restrictions and model-specification sensitivity in downstream policy improvement and DR.
-4. **Contrastive candidate generator completed, readiness gate failed:** do not use the current intervention-skewed candidates as demonstrations; revise the improvement method or nuisance models first.
-5. Implement the improved policy using retrieved contrastive examples.
+4. **Critic-derived candidate generator completed and rejected:** its readiness gate failed because of intervention bias.
+5. **Factual outcome library completed:** integrate prompt-safe state-matched retrieval into an improved LLM policy, while treating balanced examples as context rather than action prevalence.
 6. Build direct-method and doubly robust evaluation with patient-level bootstrap intervals.
 7. Run robustness and alternate-reward stress tests.
 

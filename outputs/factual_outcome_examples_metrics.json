@@ -1,0 +1,85 @@
+{
+  "candidates_after_support_and_patient_deduplication": {
+    "escalate_vasopressor": {
+      "favorable": 100,
+      "unfavorable": 100
+    },
+    "iv_fluids": {
+      "favorable": 100,
+      "unfavorable": 100
+    },
+    "maintain": {
+      "favorable": 100,
+      "unfavorable": 100
+    }
+  },
+  "config": {
+    "cross_validation_folds": 5,
+    "diagnostics_path": "outputs/factual_outcome_examples_metrics.json",
+    "library_path": "outputs/factual_outcome_examples.csv",
+    "lower_reward_quantile": 0.25,
+    "max_examples_per_cell": 100,
+    "minimum_examples_per_cell": 20,
+    "minimum_logged_propensity": 0.02,
+    "random_seed": 42,
+    "upper_reward_quantile": 0.75
+  },
+  "data_scope": "training_only_cross_fitted_behavior_support",
+  "interpretation": "Outcome labels are relative within logged action and are factual associations, not counterfactual optimal-action labels.",
+  "logged_action_propensity": {
+    "max": 0.8995395396743503,
+    "median": 0.14878824113663153,
+    "min": 0.02122529770691734,
+    "p25": 0.04825441828376399,
+    "p75": 0.7981486165681663
+  },
+  "map_below_65": {
+    "selected_rate": 0.215,
+    "source_rate": 0.06095238095238095
+  },
+  "policy_improvement_readiness": {
+    "approved": true,
+    "insufficient_cells": [],
+    "reason": null
+  },
+  "selected_counts": {
+    "escalate_vasopressor": {
+      "favorable": 100,
+      "unfavorable": 100
+    },
+    "iv_fluids": {
+      "favorable": 100,
+      "unfavorable": 100
+    },
+    "maintain": {
+      "favorable": 100,
+      "unfavorable": 100
+    }
+  },
+  "selected_rows": 600,
+  "thresholds": {
+    "lower_reward_quantile": 0.25,
+    "max_examples_per_cell": 100,
+    "minimum_examples_per_cell": 20,
+    "minimum_logged_propensity": 0.02,
+    "per_action_reward_thresholds": {
+      "escalate_vasopressor": {
+        "logged_rows": 872,
+        "lower": 0.3252,
+        "upper": 1.0358
+      },
+      "iv_fluids": {
+        "logged_rows": 3389,
+        "lower": 0.06800000000000003,
+        "upper": 0.7248000000000001
+      },
+      "maintain": {
+        "logged_rows": 20939,
+        "lower": -0.3488,
+        "upper": 0.2264
+      }
+    },
+    "upper_reward_quantile": 0.75
+  },
+  "unique_source_patients": 517
+}

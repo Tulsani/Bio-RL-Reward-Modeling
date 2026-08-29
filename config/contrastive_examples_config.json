@@ -9,5 +9,6 @@
   "minimum_logged_reward": 0.0,
   "minimum_examples_per_action": 10,
   "examples_path": "outputs/contrastive_examples.csv",
-  "diagnostics_path": "outputs/contrastive_examples_metrics.json"
+  "diagnostics_path": "outputs/contrastive_examples_metrics.json",
+  "bias_diagnostics_path": "outputs/action_bias_diagnostics.json"
 }
